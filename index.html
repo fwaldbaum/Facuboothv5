@@ -1,28 +1,207 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FacuBooth</title>
-    <link rel="stylesheet" href="style.css">
+    <title>FacuBooth | Photo Booth Pro</title>
+    <style>
+        /* --- ESTILOS FUTURISTAS (CSS) --- */
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
+            --dark-bg: #050507;
+            --glass: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Orbitron', sans-serif; /* Fuente tipo tech */
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .hidden { display: none !important; opacity: 0; }
+
+        /* Pantalla Inicial */
+        .logo {
+            font-size: clamp(3rem, 10vw, 6rem);
+            text-shadow: 0 0 20px var(--neon-blue);
+            margin-bottom: 50px;
+            letter-spacing: 8px;
+        }
+
+        .btn-main {
+            padding: 25px 80px;
+            font-size: 2rem;
+            background: transparent;
+            border: 4px solid var(--neon-blue);
+            color: var(--neon-blue);
+            border-radius: 100px;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--neon-blue);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 20px var(--neon-blue); }
+            50% { transform: scale(1.05); box-shadow: 0 0 40px var(--neon-blue); }
+            100% { transform: scale(1); box-shadow: 0 0 20px var(--neon-blue); }
+        }
+
+        /* Selección de Plantillas */
+        .grid-templates {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            width: 80%;
+        }
+
+        .btn-temp {
+            background: var(--glass);
+            border: 2px solid var(--neon-purple);
+            color: white;
+            padding: 50px 20px;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Modo Trabajador (Acceso oculto) */
+        #admin-trigger {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 999;
+        }
+
+        /* Marca de Agua */
+        .watermark {
+            position: absolute;
+            bottom: 20px;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 2px;
+        }
+
+        /* Teclado Propio (Simulación simple) */
+        .custom-keyboard {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #111;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 10px;
+            border-top: 2px solid var(--neon-blue);
+        }
+    </style>
 </head>
 <body>
-    <div id="app" class="theme-futuristic">
-        <section id="screen-home" class="screen">
-            <h1 class="logo">FACUBOOTH</h1>
-            <button id="btn-start" class="btn-main">EMPEZAR</button>
-            <div id="admin-trigger" onclick="openAdmin()"></div> </section>
 
-        <section id="screen-status" class="screen hidden">
-            <h2 id="status-message">MODO MANTENIMIENTO</h2>
-            <button onclick="checkAdminPass()" class="btn-small">Desbloquear</button>
+    <div id="app">
+        <section id="screen-home" class="screen">
+            <div id="admin-trigger" onclick="promptAdmin()"></div>
+            <h1 class="logo">FACUBOOTH</h1>
+            <button class="btn-main" onclick="goToTemplates()">EMPEZAR</button>
         </section>
 
-        <div id="custom-keyboard" class="keyboard hidden">
-            <div class="keyboard-display"></div>
-            <div class="keyboard-grid" id="keys-container"></div>
-        </div>
+        <section id="screen-templates" class="screen hidden">
+            <h2 style="color: var(--neon-purple)">ELIGE TU PLANTILLA</h2>
+            <div class="grid-templates">
+                <button class="btn-temp" onclick="startPhotoProcess(2, 'V')">2 FOTOS<br>VERTICAL</button>
+                <button class="btn-temp" onclick="startPhotoProcess(2, 'H')">2 FOTOS<br>HORIZONTAL</button>
+                <button class="btn-temp" onclick="startPhotoProcess(4, 'V')">4 FOTOS<br>VERTICAL</button>
+                <button class="btn-temp" onclick="startPhotoProcess(4, 'H')">4 FOTOS<br>HORIZONTAL</button>
+            </div>
+            <button onclick="navigateTo('screen-home')" style="margin-top:40px; color: grey; background:none; border:none;">VOLVER</button>
+        </section>
+
+        <section id="screen-status" class="screen hidden">
+            <h1 id="status-title" style="color: red;">MODO MANTENIMIENTO</h1>
+            <p>Por favor, contacta al staff.</p>
+            <button class="btn-temp" onclick="promptAdmin()">DESBLOQUEAR</button>
+        </section>
+
+        <div id="global-watermark" class="watermark">#FotosConFacuBooth</div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        /* --- LÓGICA DE PROGRAMACIÓN (JS) --- */
+        
+        const state = {
+            systemMode: 'normal', // normal, mantenimiento, cerrado
+            sessions: 0,
+            watermark: true
+        };
+
+        // Navegación Global
+        function navigateTo(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // Flujo Principal
+        function goToTemplates() {
+            if (state.systemMode !== 'normal') {
+                showStatusScreen();
+            } else {
+                navigateTo('screen-templates');
+            }
+        }
+
+        function startPhotoProcess(fotos, orientacion) {
+            alert(`Iniciando secuencia: ${fotos} fotos en modo ${orientacion}.\n(Siguiente paso: Activar Cámara)`);
+            // Aquí conectaremos la API de la cámara en la siguiente fase
+        }
+
+        // Modo Trabajador
+        function promptAdmin() {
+            const pass = prompt("CONTRASEÑA MODO TRABAJADOR:");
+            if (pass === "1010") {
+                openAdminMenu();
+            } else if (pass !== null) {
+                alert("Código incorrecto");
+            }
+        }
+
+        function openAdminMenu() {
+            const action = prompt("MODO TRABAJADOR\n1. Normal\n2. Mantenimiento\n3. Cerrado\n4. Ver Estadísticas\n5. Marca de Agua ON/OFF");
+            
+            switch(action) {
+                case "1": state.systemMode = 'normal'; navigateTo('screen-home'); break;
+                case "2": state.systemMode = 'mantenimiento'; showStatusScreen(); break;
+                case "3": state.systemMode = 'cerrado'; showStatusScreen(); break;
+                case "4": alert(`ESTADÍSTICAS:\nSesiones: ${state.sessions}`); break;
+                case "5": 
+                    state.watermark = !state.watermark;
+                    document.getElementById('global-watermark').style.display = state.watermark ? 'block' : 'none';
+                    break;
+            }
+        }
+
+        function showStatusScreen() {
+            document.getElementById('status-title').innerText = `SISTEMA: ${state.systemMode.toUpperCase()}`;
+            navigateTo('screen-status');
+        }
+    </script>
 </body>
 </html>
