@@ -1,0 +1,61 @@
+:root {
+    --neon-blue: #00f2ff;
+    --neon-purple: #bc13fe;
+    --dark-bg: #0a0a0c;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: white;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden; /* Evita scroll en tablets */
+    margin: 0;
+}
+
+.screen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.logo {
+    font-size: 5rem;
+    text-shadow: 0 0 20px var(--neon-blue);
+    letter-spacing: 5px;
+}
+
+.btn-main {
+    padding: 20px 60px;
+    font-size: 2rem;
+    background: transparent;
+    border: 3px solid var(--neon-blue);
+    color: var(--neon-blue);
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 0 15px var(--neon-blue);
+    transition: 0.3s;
+}
+
+/* Teclado Personalizado */
+.keyboard {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: rgba(20, 20, 25, 0.95);
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 10px;
+}
+
+.key {
+    background: #222;
+    border: 1px solid var(--neon-purple);
+    padding: 15px;
+    border-radius: 50%; /* Teclas redondas */
+    text-align: center;
+    font-weight: bold;
+}
