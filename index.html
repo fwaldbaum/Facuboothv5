@@ -1,0 +1,28 @@
+ <!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FacuBooth</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="theme-futuristic">
+        <section id="screen-home" class="screen">
+            <h1 class="logo">FACUBOOTH</h1>
+            <button id="btn-start" class="btn-main">EMPEZAR</button>
+            <div id="admin-trigger" onclick="openAdmin()"></div> </section>
+
+        <section id="screen-status" class="screen hidden">
+            <h2 id="status-message">MODO MANTENIMIENTO</h2>
+            <button onclick="checkAdminPass()" class="btn-small">Desbloquear</button>
+        </section>
+
+        <div id="custom-keyboard" class="keyboard hidden">
+            <div class="keyboard-display"></div>
+            <div class="keyboard-grid" id="keys-container"></div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
